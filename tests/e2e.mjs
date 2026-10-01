@@ -1,0 +1,136 @@
+import { createRequire } from 'module';
+const require = createRequire('/home/claude/.npm-global/lib/node_modules/');
+const { chromium } = require('playwright');
+
+const URL = process.env.URL || 'http://localhost:4173/';
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1500, height: 950 } });
+const logs = [];
+page.on('console', (m) => logs.push(`[${m.type()}] ${m.text()}`));
+page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`));
+await page.goto(URL);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const run = (i, cmd) => page.evaluate(([i, cmd]) => __app.shells[i].typeCommand(cmd, true), [i, cmd]);
+const key = (i, d) => page.evaluate(([i, d]) => __app.shells[i].onData(d), [i, d]);
+const text = (i) => page.evaluate((i) => {
+  const b = __app.shells[i].term.buffer.active; const out = [];
+  for (let y = 0; y < b.length; y++) out.push(b.getLine(y).translateToString(true));
+  return out.join('\n').replace(/\n+$/, '');
+}, i);
+const clear = (i) => page.evaluate((i) => __app.shells[i].term.clear(), i);
+
+const t0 = Date.now();
+await page.waitForFunction(() => document.getElementById('status-text').textContent.includes('준비됨'), null, { timeout: 90000 });
+console.log('crossOriginIsolated:', await page.evaluate(() => crossOriginIsolated), 'engine ready in', Date.now() - t0, 'ms');
+
+const step = async (name, fn) => { console.log(`\n===== ${name} =====`); await fn(); };
+await step('talker + echo', async () => {
+  await run(0, 'python3 talker.py');
+  await sleep(4000);
+  await run(1, 'ros2 topic echo /chatter');
+  await sleep(2500);
+  await key(1, '\x03');
+  await run(1, 'ros2 node list');
+  await run(1, 'ros2 topic info /chatter');
+  await run(1, 'ros2 node info /talker');
+  await sleep(300);
+  console.log('--- T1\n' + (await text(0)).split('\n').slice(-6).join('\n'));
+  console.log('--- T2\n' + await text(1));
+});
+await step('listener', async () => {
+  await clear(1);
+  await run(1, 'python3 listener.py');
+  await sleep(4000);
+  await key(1, '\x03');
+  await sleep(800);
+  await key(0, '\x03');
+  await sleep(800);
+  console.log('--- T1\n' + (await text(0)).split('\n').slice(-8).join('\n'));
+  console.log('--- T2\n' + (await text(1)).split('\n').slice(-10).join('\n'));
+});
+await step('turtlesim + pub + service + param', async () => {
+  await clear(0); await clear(1);
+  await run(0, 'ros2 run turtlesim turtlesim_node');
+  await sleep(500);
+  await run(1, 'ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}, angular: {z: 1.8}}"');
+  await sleep(1500);
+  await run(1, `ros2 service call /spawn turtlesim/srv/Spawn "{x: 2.0, y: 2.0, theta: 0.2, name: ''}"`);
+  await sleep(500);
+  await run(1, 'ros2 param set /turtlesim background_r 150');
+  await sleep(300);
+  await run(1, 'ros2 param get /turtlesim background_r');
+  await run(1, 'ros2 topic hz /turtle1/pose');
+  await sleep(2300);
+  await key(1, '\x03');
+  console.log('--- T1\n' + await text(0));
+  console.log('--- T2\n' + await text(1));
+  await page.screenshot({ path: 'tests/shot1.png' });
+});
+await step('circle driver + server/client + params + hints', async () => {
+  await clear(1);
+  await run(1, 'python3 turtle_circle.py');
+  await sleep(4000);
+  await page.screenshot({ path: 'tests/shot2.png' });
+  await page.click('.vtab[data-view=graph]'); await sleep(300); await page.screenshot({ path: 'tests/shot3.png' }); await page.click('.vtab[data-view=turtle]');
+  await key(1, '\x03');
+  await sleep(600);
+  await clear(1);
+  await page.evaluate(() => __app.shells.length < 3 && document.getElementById('add-term').click());
+  await run(1, 'python3 add_two_ints_server.py');
+  await sleep(3500);
+  await run(2, 'python3 add_two_ints_client.py 7 5');
+  await sleep(4500);
+  await run(2, 'ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 2, b: 3}"');
+  await sleep(1000);
+  await key(1, '\x03');
+  await sleep(600);
+  await run(1, 'python3 param_node.py');
+  await sleep(3500);
+  await run(2, 'ros2 param set /param_node my_parameter earth');
+  await sleep(1500);
+  await run(2, 'ros2 param list /param_node');
+  await sleep(1500);
+  await key(1, '\x03');
+  await sleep(600);
+  console.log('--- T2\n' + await text(1));
+  console.log('--- T3\n' + await text(2));
+});
+await step('mistakes -> hints', async () => {
+  await page.evaluate(() => {
+    const f = __app.files;
+    f.set('bad_float.py', `import rclpy\nfrom rclpy.node import Node\nfrom geometry_msgs.msg import Twist\nrclpy.init()\nn = Node('bad')\nm = Twist()\nm.linear.x = 2\n`);
+    f.set('no_spin.py', `import rclpy\nfrom rclpy.node import Node\nrclpy.init()\nn = Node('lazy')\nn.create_timer(0.5, lambda: print('tick'))\nrclpy.shutdown()\n`);
+    f.set('typo.py', `import rclpy\nfrom rclpy.node import Node\nfrom std_msgs.msg import String\nrclpy.init()\nn = Node('typo_listener')\nn.create_subscription(String, 'chater', lambda m: print(m.data), 10)\ntry:\n    rclpy.spin(n)\nexcept KeyboardInterrupt:\n    pass\n`);
+    f.set('bad_import.py', `import rclpy\nfrom nav2_msgs.msg import Foo\n`);
+  });
+  await clear(1); await clear(2);
+  await run(1, 'python3 bad_float.py');
+  await sleep(3500);
+  await run(1, 'python3 no_spin.py');
+  await sleep(3500);
+  await run(1, 'python3 bad_import.py');
+  await sleep(3500);
+  await run(2, 'python3 talker.py');
+  await sleep(3500);
+  await run(1, 'python3 typo.py');
+  await sleep(3500);
+  await key(1, '\x03');
+  await key(2, '\x03');
+  await sleep(800);
+  console.log('--- T2\n' + await text(1));
+});
+await step('teleop', async () => {
+  await clear(1);
+  const before = await page.evaluate(() => { const t = __app.turtlesim.turtles.get('turtle1'); return [t.x, t.y]; });
+  await run(1, 'ros2 run turtlesim turtle_teleop_key');
+  for (let i = 0; i < 3; i++) { await key(1, '\x1b[A'); await sleep(300); }
+  await sleep(800);
+  const after = await page.evaluate(() => { const t = __app.turtlesim.turtles.get('turtle1'); return [t.x, t.y]; });
+  console.log('turtle1 before', before, 'after', after);
+  await key(1, 'q');
+  await sleep(200);
+  console.log('--- T2\n' + await text(1));
+  await page.screenshot({ path: 'tests/shot4.png' });
+});
+console.log('\n===== console logs =====\n' + logs.slice(-20).join('\n'));
+await browser.close();
