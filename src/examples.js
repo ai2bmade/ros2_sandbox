@@ -62,7 +62,7 @@ def main():
 if __name__ == '__main__':
     main()
 `,
-  'turtle_circle.py': `# 먼저 다른 터미널에서: ros2 run turtlesim turtlesim_node
+  'turtle_circle.py': `# First, in another terminal: ros2 run turtlesim turtlesim_node
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -169,8 +169,8 @@ def main():
 if __name__ == '__main__':
     main()
 `,
-  'param_node.py': `# 실행: python3 param_node.py
-# 다른 터미널에서: ros2 param set /param_node my_parameter earth
+  'param_node.py': `# Run: python3 param_node.py
+# In another terminal: ros2 param set /param_node my_parameter earth
 import rclpy
 from rclpy.node import Node
 

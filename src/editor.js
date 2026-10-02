@@ -150,7 +150,7 @@ export class Editor {
       const x = document.createElement('button');
       x.className = 'tab-x';
       x.textContent = '×';
-      x.title = '닫기';
+      x.title = 'Close';
       x.onclick = (e) => { e.stopPropagation(); this.closeFile(n); };
       tab.append(label, x);
       this.tabsEl.append(tab);

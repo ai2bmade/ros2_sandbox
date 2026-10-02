@@ -212,12 +212,12 @@ export function runRos2(args, ctx) {
     if (pkg === 'turtlesim' && exe === 'turtle_teleop_key') return startTeleop(graph, term);
     if (!pkg) { out('usage: ros2 run <package> <executable>'); return 2; }
     out(`Package '${pkg}' not found` + (pkg === 'turtlesim' ? '' : ''));
-    term.writeHint("이 샌드박스에서 ros2 run으로 실행할 수 있는 것: turtlesim turtlesim_node, turtlesim turtle_teleop_key. 직접 작성한 파일은 python3 파일이름.py 로 실행하세요.");
+    term.writeHint("In this sandbox, ros2 run supports: turtlesim turtlesim_node, turtlesim turtle_teleop_key. Run your own files with python3 <file>.py");
     return 1;
   }
 
   out(`ros2: error: argument Call \`ros2 <command> -h\` for more detailed usage.: invalid choice: '${[cmd, sub].filter(Boolean).join(' ')}'`);
-  term.writeHint('지원하는 명령: ros2 node | topic | service | param | interface | run. 자세한 내용은 help 를 입력하세요.');
+  term.writeHint('Supported commands: ros2 node | topic | service | param | interface | run. Type help for details.');
   return 2;
 }
 
@@ -287,7 +287,7 @@ function topicPub(pos, flags, ctx, out) {
   const type = normalizeType(rawType);
   if (!isMsgType(type)) {
     out(`The passed message type is invalid`);
-    ctx.term.writeHint(`'${rawType}' 타입을 찾을 수 없습니다. 예: geometry_msgs/msg/Twist. 목록은 ros2 interface list`);
+    ctx.term.writeHint(`Type '${rawType}' not found. Example: geometry_msgs/msg/Twist. See the list with ros2 interface list`);
     return 1;
   }
   let msg;
@@ -297,7 +297,7 @@ function topicPub(pos, flags, ctx, out) {
   } catch (e) {
     out(String(e.message || e));
     if (/YAML|Implicit|Flow|Nested|Unexpected/i.test(String(e.name) + String(e.message))) {
-      ctx.term.writeHint("값은 YAML 형식으로 따옴표 안에 넣습니다. 예: \"{linear: {x: 2.0}, angular: {z: 1.8}}\"  (콜론 뒤에 공백이 필요합니다)");
+      ctx.term.writeHint("Put the value in quotes as YAML. Example: \"{linear: {x: 2.0}, angular: {z: 1.8}}\"  (a space is needed after each colon)");
     }
     return 1;
   }

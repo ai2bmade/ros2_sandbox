@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,11 +15,19 @@
          font: 15px/1.6 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif;
          display: flex; flex-direction: column; }
   main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
-  .wrap { width: 100%; max-width: 460px; }
+  .wrap { width: 100%; max-width: 520px; }
   .brand { font-weight: 700; font-size: 15px; letter-spacing: .02em; color: var(--muted); margin-bottom: 20px; }
   .brand b { color: var(--text); }
   h1 { font-size: 28px; line-height: 1.3; margin: 0 0 12px; font-weight: 700; }
-  .lead { color: var(--muted); margin: 0 0 24px; }
+  h1 { margin-bottom: 6px; }
+  .ko-sub { color: var(--muted); margin: 0 0 24px; font-size: 15px; }
+  .ko { color: var(--muted); }
+  .notice { border: 1px solid rgba(224,175,104,.45); background: rgba(224,175,104,.08); border-radius: 12px; padding: 16px 18px; margin: 0 0 24px; }
+  .notice-tag { display: inline-block; font-size: 12px; font-weight: 700; color: var(--warn); margin-bottom: 8px; letter-spacing: .02em; }
+  .notice p { margin: 0; font-size: 14px; color: var(--text); }
+  .notice p.ko { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(224,175,104,.25); color: var(--muted); }
+  ul.points li small { display: block; color: var(--muted); font-size: 13px; }
+  .card .note.ko { margin-top: 4px; }
   ul.points { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 8px; }
   code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color: var(--accent); }
   ul.points li { display: flex; gap: 10px; color: var(--text); font-size: 14px; }
@@ -58,71 +66,79 @@
 <main>
   <div class="wrap">
     <div class="brand"><b>ROS2</b> Sandbox</div>
-    <h1>설치 없이, 브라우저에서<br>ROS 2를 바로 써 보세요</h1>
-    <p class="lead">처음 ROS 2를 배우는 분을 위한 실습장입니다.</p>
+    <h1>Practice ROS 2 basics in your browser</h1>
+    <p class="ko-sub">설치 없이 브라우저에서 ROS 2 기초를 연습하세요</p>
+
+    <div class="notice">
+      <div class="notice-tag">Beginner practice only · 초보자 연습용</div>
+      <p>A simple practice space for learning beginner ROS 2 syntax: writing <code>rclpy</code> nodes, topics, services and parameters, and the <code>ros2</code> command line. It is not a full ROS 2 environment, so complex projects such as packages, launch files, actions, TF or simulators like Gazebo are not supported.</p>
+      <p class="ko">ROS 2 초보 문법(<code>rclpy</code> 노드, 토픽, 서비스, 파라미터, <code>ros2</code> 명령)을 익히기 위한 단순 연습장입니다. 실제 ROS 2 환경이 아니므로 패키지, launch 파일, 액션, TF, Gazebo 같은 시뮬레이터 등 복잡한 구현은 할 수 없습니다.</p>
+    </div>
+
     <ul class="points">
-      <li><span>Python으로 노드를 작성하고 터미널에서 바로 실행</span></li>
-      <li><span><code>ros2 topic</code> · <code>service</code> · <code>param</code> 명령 연습</span></li>
-      <li><span>turtlesim 거북이와 노드 그래프로 결과 확인</span></li>
+      <li><span>Write a Python node and run it in the terminal<small>Python 노드를 작성하고 터미널에서 바로 실행</small></span></li>
+      <li><span>Try <code>ros2 topic</code> · <code>service</code> · <code>param</code> commands<small>ros2 명령 연습</small></span></li>
+      <li><span>See results with turtlesim and the node graph<small>turtlesim 거북이와 노드 그래프로 결과 확인</small></span></li>
     </ul>
 
     <div class="card" id="card">
-      <p>불러오는 중…</p>
+      <p>Loading…</p>
     </div>
   </div>
 </main>
-<footer><a href="/privacy/">개인정보처리방침</a></footer>
+<footer><a href="/privacy/">Privacy policy · 개인정보처리방침</a></footer>
 
 <template id="t-login">
   <div class="error" data-error hidden></div>
   <a class="google" href="/api/auth/google">
     <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
-    Google로 로그인
+    Sign in with Google
   </a>
-  <p class="note">승인된 사용자만 이용할 수 있습니다. 처음이라면 로그인한 뒤 이용 신청을 해 주세요.</p>
+  <p class="note">Only approved users can use the sandbox. New here? Sign in, then request access.</p>
+  <p class="note ko">승인된 사용자만 이용할 수 있습니다. 처음이라면 로그인한 뒤 이용 신청을 해 주세요.</p>
 </template>
 
 <template id="t-apply">
-  <h2>이용 신청</h2>
-  <p>이름을 확인하고 신청하시면, 확인 후 승인해 드립니다.</p>
+  <h2>Request access</h2>
+  <p>Check your name and send the request. You can start once it is approved.<br><span class="ko">이름을 확인하고 신청하시면, 확인 후 승인해 드립니다.</span></p>
   <div class="error" data-error hidden></div>
   <form data-form>
     <label>Gmail<input name="email" readonly></label>
-    <label>이름 <span class="req">*</span><input name="name" maxlength="50" required autocomplete="name"></label>
-    <button class="primary" type="submit">신청하기</button>
+    <label>Name <span class="req">*</span><input name="name" maxlength="50" required autocomplete="name"></label>
+    <button class="primary" type="submit">Request access</button>
   </form>
-  <div class="row"><span class="who" data-who></span><button class="link" data-logout>다른 계정으로 로그인</button></div>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>Use another account</button></div>
 </template>
 
 <template id="t-pending">
-  <span class="status-pill wait">승인 대기 중</span>
-  <h2>신청이 접수되었습니다</h2>
-  <p>승인되면 이 계정으로 다시 로그인하는 것만으로 바로 실습을 시작할 수 있습니다.</p>
-  <div class="row"><span class="who" data-who></span><button class="link" data-logout>로그아웃</button></div>
+  <span class="status-pill wait">Waiting for approval</span>
+  <h2>Your request has been sent</h2>
+  <p>Once it is approved, just sign in again with this account to start.<br><span class="ko">신청이 접수되었습니다. 승인되면 이 계정으로 다시 로그인해 바로 시작할 수 있습니다.</span></p>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>Log out</button></div>
 </template>
 
 <template id="t-rejected">
-  <span class="status-pill bad">승인되지 않음</span>
-  <h2>이용 신청이 승인되지 않았습니다</h2>
-  <p>내용을 보완해 다시 신청하실 수 있습니다. 문의: ai2bmade@gmail.com</p>
-  <button class="primary" data-reapply style="width:100%">다시 신청하기</button>
-  <div class="row"><span class="who" data-who></span><button class="link" data-logout>로그아웃</button></div>
+  <span class="status-pill bad">Not approved</span>
+  <h2>Your request was not approved</h2>
+  <p>You can send a new request. Contact: ai2bmade@gmail.com<br><span class="ko">이용 신청이 승인되지 않았습니다. 다시 신청하실 수 있습니다.</span></p>
+  <button class="primary" data-reapply style="width:100%">Request again</button>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>Log out</button></div>
 </template>
 
 <template id="t-suspended">
-  <span class="status-pill bad">이용 정지</span>
-  <h2>이용이 정지된 계정입니다</h2>
-  <p>문의: ai2bmade@gmail.com</p>
-  <div class="row"><span class="who" data-who></span><button class="link" data-logout>로그아웃</button></div>
+  <span class="status-pill bad">Suspended</span>
+  <h2>This account is suspended</h2>
+  <p>Contact: ai2bmade@gmail.com<br><span class="ko">이용이 정지된 계정입니다.</span></p>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>Log out</button></div>
 </template>
 
 <script>
   const ERRORS = {
-    cancelled: 'Google 로그인을 취소했습니다.',
-    state: '로그인 요청이 만료되었습니다. 다시 시도해 주세요.',
-    unverified: '이메일 인증이 끝난 Google 계정만 사용할 수 있습니다.',
-    google: 'Google 로그인 중 문제가 생겼습니다. 잠시 후 다시 시도해 주세요.',
-    config: '로그인 설정이 아직 끝나지 않았습니다. 관리자에게 알려 주세요.',
+    cancelled: 'Google sign-in was cancelled. · Google 로그인을 취소했습니다.',
+    state: 'The sign-in request expired. Please try again. · 로그인 요청이 만료되었습니다.',
+    unverified: 'Only Google accounts with a verified email can be used. · 이메일 인증이 끝난 Google 계정만 쓸 수 있습니다.',
+    google: 'Something went wrong with Google sign-in. Please try again later. · Google 로그인 중 문제가 생겼습니다.',
+    config: 'Sign-in is not set up yet. Please tell the administrator. · 로그인 설정이 아직 끝나지 않았습니다.',
   };
   const card = document.getElementById('card');
 
@@ -151,12 +167,12 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = form.querySelector('button[type=submit]');
-      btn.disabled = true; btn.textContent = '보내는 중…';
+      btn.disabled = true; btn.textContent = 'Sending…';
       const body = { name: form.name.value };
       const res = await fetch('/api/apply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) { render((await res.json()).user); return; }
-      btn.disabled = false; btn.textContent = '신청하기';
-      showError('신청을 보내지 못했습니다. 다시 시도해 주세요.');
+      btn.disabled = false; btn.textContent = 'Request access';
+      showError('Could not send the request. Please try again. · 신청을 보내지 못했습니다.');
     });
   }
 

@@ -20,7 +20,7 @@ export class GraphView {
     const nodes = g.visibleNodes();
     if (!nodes.length) {
       c.fillStyle = '#8b93a7'; c.font = '14px system-ui, sans-serif'; c.textAlign = 'center';
-      c.fillText('실행 중인 노드가 없습니다', W / 2, H / 2);
+      c.fillText('No nodes running', W / 2, H / 2);
       return;
     }
     // like rqt_graph's default "hide leaf topics": only show topics that connect a publisher and a subscriber
@@ -68,7 +68,7 @@ export class GraphView {
       c.fillStyle = '#f0e9ff'; c.fillText(n.fqn, p.x, p.y, w - 10);
     }
     c.textAlign = 'left'; c.fillStyle = '#8b93a7'; c.font = '11px system-ui, sans-serif';
-    c.fillText('파랑: 발행(publish)   초록: 구독(subscribe)   ·   발행/구독이 모두 있는 토픽만 표시', 10, H - 12);
+    c.fillText('Blue: publish   Green: subscribe   ·   Only topics with both a publisher and a subscriber are shown', 10, H - 12);
   }
 }
 

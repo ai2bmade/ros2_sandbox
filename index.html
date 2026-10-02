@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,24 +8,24 @@
 <body>
   <div id="coi-banner" class="banner" hidden></div>
   <header class="topbar">
-    <div class="brand">ROS2-Web-Sandbox <span class="tag">실험판</span></div>
+    <div class="brand">ROS2 Sandbox <span class="tag">Beginner practice</span></div>
     <div class="top-right">
       <span class="save-state" id="save-state"></span>
-      <div class="status" id="status"><span class="dot"></span><span id="status-text">Python 엔진 준비 중…</span></div>
+      <div class="status" id="status"><span class="dot"></span><span id="status-text">Starting Python engine…</span></div>
       <div class="user-box" id="user-box"></div>
     </div>
   </header>
   <main class="layout">
     <aside class="sidebar">
       <section>
-        <div class="side-head"><span>파일</span>
-          <span class="side-actions"><button id="new-file" title="새 파일">＋</button><button id="restore" title="예제 파일 복원">↺</button></span>
+        <div class="side-head"><span>Files</span>
+          <span class="side-actions"><button id="new-file" title="New file">＋</button><button id="restore" title="Restore example files">↺</button></span>
         </div>
         <ul id="file-list" class="file-list"></ul>
       </section>
       <section>
-        <div class="side-head"><span>빠른 명령</span></div>
-        <p class="side-note">클릭하면 마지막으로 사용한 터미널에 입력됩니다</p>
+        <div class="side-head"><span>Quick commands</span></div>
+        <p class="side-note">Click to type into the last terminal you used</p>
         <ul id="quick" class="quick"></ul>
       </section>
     </aside>
@@ -35,15 +35,15 @@
         <div class="editor" id="editor"></div>
       </div>
       <div class="terms-bar">
-        <span>터미널</span>
-        <button id="add-term">＋ 터미널</button>
+        <span>Terminals</span>
+        <button id="add-term">＋ Terminal</button>
       </div>
       <div class="terms" id="terms"></div>
     </section>
     <section class="right">
       <div class="view-tabs">
         <button class="vtab active" data-view="turtle">turtlesim</button>
-        <button class="vtab" data-view="graph">노드 그래프</button>
+        <button class="vtab" data-view="graph">Node graph</button>
       </div>
       <div class="view" id="view-turtle"><canvas id="turtle-canvas" width="500" height="500"></canvas></div>
       <div class="view" id="view-graph" hidden><canvas id="graph-canvas"></canvas></div>

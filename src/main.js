@@ -34,11 +34,11 @@ function renderUserBox(me) {
   box.append(who);
   if (me.role === 'admin') {
     const admin = document.createElement('a');
-    admin.href = '/admin/'; admin.textContent = '관리자';
+    admin.href = '/admin/'; admin.textContent = 'Admin';
     box.append(admin);
   }
   const out = document.createElement('button');
-  out.textContent = '로그아웃';
+  out.textContent = 'Log out';
   out.onclick = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     location.href = '/welcome/';
@@ -50,7 +50,7 @@ async function boot() {
   const banner = document.getElementById('coi-banner');
   if (!window.crossOriginIsolated) {
     banner.hidden = false;
-    banner.textContent = '이 페이지는 HTTPS와 COOP/COEP 헤더가 있어야 Python 노드를 실행할 수 있습니다 (현재 crossOriginIsolated = false). ros2 CLI와 turtlesim은 그대로 쓸 수 있습니다.';
+    banner.textContent = 'Python nodes need HTTPS and COOP/COEP headers on this page (crossOriginIsolated = false). The ros2 CLI and turtlesim still work.';
   }
 
   const meRes = await fetch('/api/me').catch(() => null);
@@ -63,7 +63,7 @@ async function boot() {
     loadSpec(),
     Files.load((s) => {
       saveEl.className = 'save-state ' + s;
-      saveEl.textContent = s === 'saving' ? '저장 중…' : s === 'error' ? '저장 실패 · 다시 시도 중' : '저장됨';
+      saveEl.textContent = s === 'saving' ? 'Saving…' : s === 'error' ? 'Save failed · retrying' : 'Saved';
     }),
   ]);
   const graph = new Graph();
@@ -72,7 +72,7 @@ async function boot() {
   const statusText = document.getElementById('status-text');
   const pool = new WorkerPool((s, err) => {
     statusEl.className = 'status ' + (s === 'ready' ? 'ready' : s === 'error' ? 'error' : '');
-    statusText.textContent = s === 'ready' ? 'Python 엔진 준비됨' : s === 'error' ? 'Python 엔진 오류: ' + (err?.message || '') : 'Python 엔진 준비 중…';
+    statusText.textContent = s === 'ready' ? 'Python engine ready' : s === 'error' ? 'Python engine error: ' + (err?.message || '') : 'Starting Python engine…';
   });
 
   const app = { graph, files, pool, processes: new Set(), turtlesim: null };
@@ -90,10 +90,10 @@ async function boot() {
       const label = document.createElement('span');
       label.textContent = name;
       const del = document.createElement('button');
-      del.className = 'del'; del.textContent = '🗑'; del.title = '삭제';
+      del.className = 'del'; del.textContent = '🗑'; del.title = 'Delete';
       del.onclick = (e) => {
         e.stopPropagation();
-        if (confirm(`${name} 파일을 삭제할까요?`)) { editor.closeFile(name); files.remove(name); }
+        if (confirm(`Delete ${name}?`)) { editor.closeFile(name); files.remove(name); }
       };
       li.onclick = () => editor.openFile(name);
       li.append(label, del);
@@ -103,16 +103,16 @@ async function boot() {
   files.onChange(renderFiles);
   editor.onOpen = renderFiles;
   document.getElementById('new-file').onclick = () => {
-    let name = prompt('새 파일 이름 (예: my_node.py)', 'my_node.py');
+    let name = prompt('New file name (e.g. my_node.py)', 'my_node.py');
     if (!name) return;
     name = name.trim();
-    if (!/^[\w.-]+$/.test(name)) { alert('파일 이름에는 영문, 숫자, _, -, . 만 쓸 수 있습니다.'); return; }
+    if (!/^[\w.-]+$/.test(name)) { alert('File names may only use letters, numbers, _, - and .'); return; }
     if (files.get(name) != null) { editor.openFile(name); return; }
     files.create(name, name.endsWith('.py') ? 'import rclpy\nfrom rclpy.node import Node\n\n' : '');
     editor.openFile(name);
   };
   document.getElementById('restore').onclick = () => {
-    if (confirm('예제 파일을 처음 상태로 복원할까요? (같은 이름의 파일은 덮어씁니다)')) {
+    if (confirm('Restore the example files? (Files with the same names will be overwritten)')) {
       for (const n of [...editor.open]) editor.closeFile(n);
       files.restoreExamples();
       editor.openFile('talker.py');
@@ -133,12 +133,12 @@ async function boot() {
     box.className = 'term-box';
     const head = document.createElement('div');
     head.className = 'term-head';
-    head.innerHTML = `<span>터미널 ${termCount}</span>`;
+    head.innerHTML = `<span>Terminal ${termCount}</span>`;
     const stop = document.createElement('button');
-    stop.className = 'term-stop'; stop.textContent = '■ 중지'; stop.title = '실행 중인 프로그램 중지 (Ctrl+C)';
+    stop.className = 'term-stop'; stop.textContent = '■ Stop'; stop.title = 'Stop the running program (Ctrl+C)';
     stop.disabled = true;
     const close = document.createElement('button');
-    close.textContent = '×'; close.title = '터미널 닫기';
+    close.textContent = '×'; close.title = 'Close terminal';
     head.append(stop, close);
     const body = document.createElement('div');
     body.className = 'term-body';
@@ -200,7 +200,7 @@ async function boot() {
   if (window.crossOriginIsolated) pool.prewarm();
   else {
     statusEl.className = 'status error';
-    statusText.textContent = 'Python 실행 불가 (헤더 설정 필요)';
+    statusText.textContent = 'Python unavailable (headers required)';
   }
   app.shells = shells;
   window.__app = app;

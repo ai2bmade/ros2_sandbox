@@ -26,7 +26,7 @@ export class Turtlesim {
 
   start(term) {
     if (this.running) {
-      logLine(term, 'WARN', 'sandbox', '이 샌드박스에서는 turtlesim을 하나만 실행할 수 있습니다. 이미 다른 터미널에서 실행 중입니다.');
+      logLine(term, 'WARN', 'sandbox', 'Only one turtlesim can run in this sandbox. It is already running in another terminal.');
       return null;
     }
     this.term = term;
@@ -180,7 +180,7 @@ export class Turtlesim {
       c.fillStyle = '#8b93a7';
       c.font = '16px system-ui, sans-serif';
       c.textAlign = 'center';
-      c.fillText('turtlesim이 실행되고 있지 않습니다', PX / 2, PX / 2 - 12);
+      c.fillText('turtlesim is not running', PX / 2, PX / 2 - 12);
       c.font = '14px ui-monospace, monospace';
       c.fillStyle = '#c6cbe0';
       c.fillText('$ ros2 run turtlesim turtlesim_node', PX / 2, PX / 2 + 16);
