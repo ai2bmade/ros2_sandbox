@@ -84,21 +84,11 @@
 
 <template id="t-apply">
   <h2>이용 신청</h2>
-  <p>아래 내용을 보내 주시면 확인 후 승인해 드립니다.</p>
+  <p>이름을 확인하고 신청하시면, 확인 후 승인해 드립니다.</p>
   <div class="error" data-error hidden></div>
   <form data-form>
-    <label>Google 계정<input name="email" readonly></label>
+    <label>Gmail<input name="email" readonly></label>
     <label>이름 <span class="req">*</span><input name="name" maxlength="50" required autocomplete="name"></label>
-    <label>소속<input name="affiliation" maxlength="100" placeholder="학교, 회사, 수업 이름 등"></label>
-    <label>구분
-      <select name="tag">
-        <option value="학생">학생</option>
-        <option value="강사">강사</option>
-        <option value="일반">일반</option>
-        <option value="기타">기타</option>
-      </select>
-    </label>
-    <label>남기실 말<textarea name="note" maxlength="500" placeholder="어떻게 알게 되셨는지, 수강 중인 강의 등"></textarea></label>
     <button class="primary" type="submit">신청하기</button>
   </form>
   <div class="row"><span class="who" data-who></span><button class="link" data-logout>다른 계정으로 로그인</button></div>
@@ -158,14 +148,11 @@
     const form = card.querySelector('[data-form]');
     form.email.value = me.email;
     form.name.value = me.name || '';
-    if (me.affiliation) form.affiliation.value = me.affiliation;
-    if (me.tag) form.tag.value = me.tag;
-    if (me.note) form.note.value = me.note;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = form.querySelector('button[type=submit]');
       btn.disabled = true; btn.textContent = '보내는 중…';
-      const body = Object.fromEntries(['name', 'affiliation', 'tag', 'note'].map((k) => [k, form[k].value]));
+      const body = { name: form.name.value };
       const res = await fetch('/api/apply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) { render((await res.json()).user); return; }
       btn.disabled = false; btn.textContent = '신청하기';

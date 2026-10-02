@@ -193,7 +193,8 @@ app.post('/api/apply', { preHandler: requireLogin }, async (req, reply) => {
   const name = clip(b.name, 50);
   if (!name) return reply.code(400).send({ error: 'name_required' });
   const { rows } = await db.query(
-    `UPDATE users SET name = $2, affiliation = $3, tag = $4, note = $5, status = 'pending', applied_at = now()
+    `UPDATE users SET name = $2, affiliation = COALESCE($3, affiliation), tag = COALESCE($4, tag), note = COALESCE($5, note),
+            status = 'pending', applied_at = now()
       WHERE id = $1 RETURNING *`,
     [req.user.id, name, clip(b.affiliation, 100), clip(b.tag, 30), clip(b.note, 500)]);
   return { user: publicUser(rows[0]) };
