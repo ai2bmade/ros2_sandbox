@@ -41,6 +41,8 @@ button:hover { border-color: var(--accent); }
 .term-head { display: flex; justify-content: space-between; align-items: center; padding: 2px 8px; font-size: 11px; color: var(--muted); background: #141821; }
 .term-head.focused { color: var(--accent); }
 .term-head button { border: 0; background: none; padding: 0 4px; color: var(--muted); }
+.term-head .term-stop { margin-left: auto; margin-right: 6px; color: #e06c75; }
+.term-head .term-stop:disabled { color: var(--muted); opacity: 0.4; cursor: default; }
 .term-body { flex: 1; min-height: 0; padding: 4px 0 0 6px; }
 .right { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-width: 0; }
 .view-tabs { display: flex; gap: 6px; padding: 8px; border-bottom: 1px solid var(--line); }

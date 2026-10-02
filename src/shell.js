@@ -57,6 +57,15 @@ export class Shell {
     this.job = null;
     new ResizeObserver(() => { try { this.fit.fit(); } catch {} }).observe(el);
     this.term.onData((d) => this.onData(d));
+    // Catch Ctrl+C ourselves: xterm derives it from keyCode, which is 229 while a Korean IME is
+    // composing (and 0 for synthetic events), so the \x03 never arrives. Selected text still copies.
+    this.term.attachCustomKeyEventHandler((e) => {
+      const isC = e.code === 'KeyC' || e.key === 'c' || e.key === 'C' || e.key === 'ㅊ';
+      if (!isC || !e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return true;
+      if (this.term.hasSelection()) return false;
+      if (e.type === 'keydown') { e.preventDefault(); this.onData('\x03'); }
+      return false;
+    });
     this.term.write(`\x1b[2m터미널 ${index}. help 를 입력하면 사용 가능한 명령을 볼 수 있습니다.\x1b[0m\r\n`);
     this.prompt();
   }
@@ -177,10 +186,19 @@ export class Shell {
     this.redraw();
   }
 
+  // Stop button: same as Ctrl+C, then force-kill a Python process that has not exited after 2 s.
+  stop() {
+    const j = this.job;
+    if (!j) return;
+    this.onData('\x03');
+    if (j.proc) setTimeout(() => { if (j.proc.alive) j.proc.kill(); }, 2000);
+  }
+
   startJob(job) {
     this.job = job;
     job.finish = (code) => { if (this.job === job) this.endJob(code); };
     this.app.onJobsChanged?.();
+    this.onJobState?.(true);
     if (job.doneEarly !== undefined) this.endJob(job.doneEarly);
   }
 
@@ -188,6 +206,7 @@ export class Shell {
     this.job = null;
     this.prompt();
     this.app.onJobsChanged?.();
+    this.onJobState?.(false);
   }
 
   execute(line) {
