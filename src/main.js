@@ -26,6 +26,26 @@ const QUICK = [
   'ros2 interface show geometry_msgs/msg/Twist',
 ];
 
+function renderUserBox(me) {
+  const box = document.getElementById('user-box');
+  const who = document.createElement('span');
+  who.className = 'who';
+  who.textContent = me.name ? `${me.name} · ${me.email}` : me.email;
+  box.append(who);
+  if (me.role === 'admin') {
+    const admin = document.createElement('a');
+    admin.href = '/admin/'; admin.textContent = '관리자';
+    box.append(admin);
+  }
+  const out = document.createElement('button');
+  out.textContent = '로그아웃';
+  out.onclick = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.href = '/welcome/';
+  };
+  box.append(out);
+}
+
 async function boot() {
   const banner = document.getElementById('coi-banner');
   if (!window.crossOriginIsolated) {
@@ -33,9 +53,20 @@ async function boot() {
     banner.textContent = '이 페이지는 HTTPS와 COOP/COEP 헤더가 있어야 Python 노드를 실행할 수 있습니다 (현재 crossOriginIsolated = false). ros2 CLI와 turtlesim은 그대로 쓸 수 있습니다.';
   }
 
-  await loadSpec();
+  const meRes = await fetch('/api/me').catch(() => null);
+  const me = meRes?.ok ? (await meRes.json()).user : null;
+  if (!me || me.status !== 'approved') { location.href = '/welcome/'; return; }
+  renderUserBox(me);
+
+  const saveEl = document.getElementById('save-state');
+  const [, files] = await Promise.all([
+    loadSpec(),
+    Files.load((s) => {
+      saveEl.className = 'save-state ' + s;
+      saveEl.textContent = s === 'saving' ? '저장 중…' : s === 'error' ? '저장 실패 · 다시 시도 중' : '저장됨';
+    }),
+  ]);
   const graph = new Graph();
-  const files = new Files();
 
   const statusEl = document.getElementById('status');
   const statusText = document.getElementById('status-text');

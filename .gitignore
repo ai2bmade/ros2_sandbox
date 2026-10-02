@@ -2,3 +2,5 @@ node_modules
 dist
 public/pyodide
 tests/*.png
+server/node_modules
+server/.pglite

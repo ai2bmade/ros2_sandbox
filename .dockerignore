@@ -3,3 +3,5 @@ dist
 public/pyodide
 tests
 .git
+server/node_modules
+server/.pglite

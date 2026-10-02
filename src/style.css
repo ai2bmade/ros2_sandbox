@@ -10,6 +10,12 @@ button:hover { border-color: var(--accent); }
 .banner { background: #4a1d27; color: #ffd6dc; padding: 8px 16px; font-size: 13px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
 .brand { font-weight: 600; }
+.top-right { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.save-state { color: var(--muted); font-size: 12px; }
+.save-state.error { color: var(--err); }
+.user-box { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); min-width: 0; }
+.user-box .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.user-box a { color: var(--accent); text-decoration: none; }
 .tag { font-size: 11px; color: var(--warn); border: 1px solid var(--warn); border-radius: 4px; padding: 0 5px; margin-left: 6px; }
 .status { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }

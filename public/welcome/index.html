@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROS2 Sandbox</title>
+<style>
+  :root {
+    --bg: #0e1117; --panel: #151922; --panel2: #1b2029; --line: #2a303c; --text: #d7dae0; --muted: #8b93a7;
+    --accent: #7aa2f7; --ok: #9ece6a; --warn: #e0af68; --err: #f7768e;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; word-break: keep-all; overflow-wrap: anywhere; background: var(--bg); color: var(--text);
+         font: 15px/1.6 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif;
+         display: flex; flex-direction: column; }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
+  .wrap { width: 100%; max-width: 460px; }
+  .brand { font-weight: 700; font-size: 15px; letter-spacing: .02em; color: var(--muted); margin-bottom: 20px; }
+  .brand b { color: var(--text); }
+  h1 { font-size: 28px; line-height: 1.3; margin: 0 0 12px; font-weight: 700; }
+  .lead { color: var(--muted); margin: 0 0 24px; }
+  ul.points { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 8px; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; color: var(--accent); }
+  ul.points li { display: flex; gap: 10px; color: var(--text); font-size: 14px; }
+  ul.points li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 9px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+  .card h2 { font-size: 18px; margin: 0 0 6px; }
+  .card p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  .google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px 16px;
+            background: #fff; color: #1f1f1f; border: 0; border-radius: 8px; font-family: inherit; font-weight: 600; font-size: 15px; line-height: 1; text-decoration: none; cursor: pointer; }
+  .google:hover { background: #f1f3f4; }
+  .google svg { width: 18px; height: 18px; }
+  .note { margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .error { background: rgba(247,118,142,.12); border: 1px solid rgba(247,118,142,.4); color: #ffc2cd; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 16px; }
+  form { display: grid; gap: 14px; }
+  label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+  label .req { color: var(--err); }
+  input, select, textarea { width: 100%; font: inherit; font-size: 14px; color: var(--text); background: var(--panel2);
+                            border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  input[readonly] { color: var(--muted); }
+  textarea { min-height: 76px; resize: vertical; }
+  .primary { padding: 11px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #0e1117; font-family: inherit; font-weight: 600; font-size: 15px; line-height: 1; cursor: pointer; }
+  .primary:disabled { opacity: .6; cursor: default; }
+  .link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
+  .status-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
+  .status-pill.wait { background: rgba(224,175,104,.15); color: var(--warn); }
+  .status-pill.bad { background: rgba(247,118,142,.15); color: var(--err); }
+  .who { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; }
+  footer { text-align: center; padding: 16px; font-size: 12px; color: var(--muted); }
+  footer a { color: var(--muted); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="wrap">
+    <div class="brand"><b>ROS2</b> Sandbox</div>
+    <h1>설치 없이, 브라우저에서<br>ROS 2를 바로 써 보세요</h1>
+    <p class="lead">처음 ROS 2를 배우는 분을 위한 실습장입니다.</p>
+    <ul class="points">
+      <li><span>Python으로 노드를 작성하고 터미널에서 바로 실행</span></li>
+      <li><span><code>ros2 topic</code> · <code>service</code> · <code>param</code> 명령 연습</span></li>
+      <li><span>turtlesim 거북이와 노드 그래프로 결과 확인</span></li>
+    </ul>
+
+    <div class="card" id="card">
+      <p>불러오는 중…</p>
+    </div>
+  </div>
+</main>
+<footer><a href="/privacy/">개인정보처리방침</a></footer>
+
+<template id="t-login">
+  <div class="error" data-error hidden></div>
+  <a class="google" href="/api/auth/google">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
+    Google로 로그인
+  </a>
+  <p class="note">승인된 사용자만 이용할 수 있습니다. 처음이라면 로그인한 뒤 이용 신청을 해 주세요.</p>
+</template>
+
+<template id="t-apply">
+  <h2>이용 신청</h2>
+  <p>아래 내용을 보내 주시면 확인 후 승인해 드립니다.</p>
+  <div class="error" data-error hidden></div>
+  <form data-form>
+    <label>Google 계정<input name="email" readonly></label>
+    <label>이름 <span class="req">*</span><input name="name" maxlength="50" required autocomplete="name"></label>
+    <label>소속<input name="affiliation" maxlength="100" placeholder="학교, 회사, 수업 이름 등"></label>
+    <label>구분
+      <select name="tag">
+        <option value="학생">학생</option>
+        <option value="강사">강사</option>
+        <option value="일반">일반</option>
+        <option value="기타">기타</option>
+      </select>
+    </label>
+    <label>남기실 말<textarea name="note" maxlength="500" placeholder="어떻게 알게 되셨는지, 수강 중인 강의 등"></textarea></label>
+    <button class="primary" type="submit">신청하기</button>
+  </form>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>다른 계정으로 로그인</button></div>
+</template>
+
+<template id="t-pending">
+  <span class="status-pill wait">승인 대기 중</span>
+  <h2>신청이 접수되었습니다</h2>
+  <p>승인되면 이 계정으로 다시 로그인하는 것만으로 바로 실습을 시작할 수 있습니다.</p>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>로그아웃</button></div>
+</template>
+
+<template id="t-rejected">
+  <span class="status-pill bad">승인되지 않음</span>
+  <h2>이용 신청이 승인되지 않았습니다</h2>
+  <p>내용을 보완해 다시 신청하실 수 있습니다. 문의: ai2bmade@gmail.com</p>
+  <button class="primary" data-reapply style="width:100%">다시 신청하기</button>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>로그아웃</button></div>
+</template>
+
+<template id="t-suspended">
+  <span class="status-pill bad">이용 정지</span>
+  <h2>이용이 정지된 계정입니다</h2>
+  <p>문의: ai2bmade@gmail.com</p>
+  <div class="row"><span class="who" data-who></span><button class="link" data-logout>로그아웃</button></div>
+</template>
+
+<script>
+  const ERRORS = {
+    cancelled: 'Google 로그인을 취소했습니다.',
+    state: '로그인 요청이 만료되었습니다. 다시 시도해 주세요.',
+    unverified: '이메일 인증이 끝난 Google 계정만 사용할 수 있습니다.',
+    google: 'Google 로그인 중 문제가 생겼습니다. 잠시 후 다시 시도해 주세요.',
+    config: '로그인 설정이 아직 끝나지 않았습니다. 관리자에게 알려 주세요.',
+  };
+  const card = document.getElementById('card');
+
+  function show(id, me) {
+    card.replaceChildren(document.getElementById(id).content.cloneNode(true));
+    const who = card.querySelector('[data-who]');
+    if (who && me) who.textContent = me.email;
+    card.querySelector('[data-logout]')?.addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.href = '/welcome/';
+    });
+    return card;
+  }
+
+  function showError(msg) {
+    const el = card.querySelector('[data-error]');
+    if (!el) return;
+    el.textContent = msg; el.hidden = false;
+  }
+
+  function showApply(me) {
+    show('t-apply', me);
+    const form = card.querySelector('[data-form]');
+    form.email.value = me.email;
+    form.name.value = me.name || '';
+    if (me.affiliation) form.affiliation.value = me.affiliation;
+    if (me.tag) form.tag.value = me.tag;
+    if (me.note) form.note.value = me.note;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = '보내는 중…';
+      const body = Object.fromEntries(['name', 'affiliation', 'tag', 'note'].map((k) => [k, form[k].value]));
+      const res = await fetch('/api/apply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) { render((await res.json()).user); return; }
+      btn.disabled = false; btn.textContent = '신청하기';
+      showError('신청을 보내지 못했습니다. 다시 시도해 주세요.');
+    });
+  }
+
+  function render(me) {
+    if (!me) {
+      show('t-login');
+      const err = new URLSearchParams(location.search).get('error');
+      if (err) showError(ERRORS[err] || ERRORS.google);
+      return;
+    }
+    if (me.status === 'approved') { location.href = '/'; return; }
+    if (me.status === 'pending') { show('t-pending', me); return; }
+    if (me.status === 'suspended') { show('t-suspended', me); return; }
+    if (me.status === 'rejected') {
+      show('t-rejected', me);
+      card.querySelector('[data-reapply]').addEventListener('click', () => showApply(me));
+      return;
+    }
+    showApply(me);
+  }
+
+  fetch('/api/me')
+    .then((r) => (r.ok ? r.json() : { user: null }))
+    .then((d) => render(d.user))
+    .catch(() => render(null));
+</script>
+</body>
+</html>

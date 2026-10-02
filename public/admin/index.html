@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사용자 관리 · ROS2 Sandbox</title>
+<style>
+  :root {
+    --bg: #0e1117; --panel: #151922; --panel2: #1b2029; --line: #2a303c; --text: #d7dae0; --muted: #8b93a7;
+    --accent: #7aa2f7; --ok: #9ece6a; --warn: #e0af68; --err: #f7768e;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px;
+           border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 1; }
+  header .brand { font-weight: 600; }
+  header .brand span { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  header nav { display: flex; gap: 14px; align-items: center; font-size: 13px; white-space: nowrap; }
+  header .brand { white-space: nowrap; }
+  @media (max-width: 640px) { #me { display: none; } header .brand span { display: none; } }
+  a { color: var(--accent); text-decoration: none; }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 28px; }
+  main > section { min-width: 0; }
+  h2 { font-size: 16px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .count { font-size: 12px; font-weight: 600; background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; color: var(--muted); }
+  .count.hot { background: rgba(224,175,104,.15); border-color: transparent; color: var(--warn); }
+  button { font: inherit; font-size: 13px; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+  button:hover { border-color: var(--accent); }
+  button.ok { background: rgba(158,206,106,.15); border-color: rgba(158,206,106,.4); color: var(--ok); }
+  button.bad { color: var(--err); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0e1117; font-weight: 600; padding: 7px 14px; }
+  input, select, textarea { font: inherit; font-size: 13px; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+  textarea { width: 100%; min-height: 84px; resize: vertical; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .requests { display: grid; gap: 10px; }
+  .req { padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; }
+  .req .name { font-weight: 600; }
+  .req .meta { color: var(--muted); font-size: 13px; }
+  .req .note { grid-column: 1 / -1; color: var(--text); font-size: 13px; background: var(--panel2); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; }
+  .req .actions { display: flex; gap: 6px; align-items: start; }
+  .empty { color: var(--muted); padding: 16px; font-size: 13px; }
+  .add { padding: 16px; display: grid; gap: 10px; }
+  .add .line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .msg { font-size: 13px; color: var(--ok); }
+  .msg.err { color: var(--err); }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .filters input { flex: 1; min-width: 200px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; position: sticky; top: 0; background: var(--panel); }
+  tr:last-child td { border-bottom: 0; }
+  td .email { font-weight: 500; }
+  td .small { color: var(--muted); font-size: 12px; }
+  td input.tag { width: 90px; }
+  td .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+  .pill.approved { background: rgba(158,206,106,.15); color: var(--ok); }
+  .pill.pending { background: rgba(224,175,104,.15); color: var(--warn); }
+  .pill.new { background: var(--panel2); color: var(--muted); }
+  .pill.rejected, .pill.suspended { background: rgba(247,118,142,.15); color: var(--err); }
+  .pill.admin { background: rgba(122,162,247,.15); color: var(--accent); margin-left: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ROS2 Sandbox<span>사용자 관리</span></div>
+  <nav><span id="me" class="sub" style="margin:0"></span><a href="/">실습 화면으로</a><button id="logout">로그아웃</button></nav>
+</header>
+<main>
+  <section>
+    <h2>승인 대기 <span class="count" id="pending-count">0</span></h2>
+    <p class="sub">Google로 로그인해 이용 신청을 보낸 사람들입니다.</p>
+    <div class="requests" id="requests"></div>
+  </section>
+
+  <section>
+    <h2>이메일로 바로 추가</h2>
+    <p class="sub">여기 넣은 Gmail은 신청 없이 바로 승인됩니다. 여러 개는 줄바꿈이나 쉼표로 구분합니다.</p>
+    <div class="panel add">
+      <textarea id="add-emails" placeholder="student1@gmail.com&#10;student2@gmail.com"></textarea>
+      <div class="line">
+        <label class="sub" style="margin:0" for="add-tag">구분</label>
+        <input id="add-tag" list="tags" placeholder="예: 학생" maxlength="30">
+        <button class="primary" id="add-btn">승인 목록에 추가</button>
+        <span class="msg" id="add-msg"></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>전체 사용자 <span class="count" id="all-count">0</span></h2>
+    <div class="filters">
+      <input id="q" placeholder="이메일, 이름, 소속으로 찾기">
+      <select id="status-filter">
+        <option value="">모든 상태</option>
+        <option value="approved">승인됨</option>
+        <option value="pending">승인 대기</option>
+        <option value="new">신청 전</option>
+        <option value="rejected">거절됨</option>
+        <option value="suspended">정지됨</option>
+      </select>
+      <select id="tag-filter"><option value="">모든 구분</option></select>
+    </div>
+    <div class="panel table-wrap">
+      <table>
+        <thead><tr><th>사용자</th><th>구분</th><th>상태</th><th>파일</th><th>마지막 접속</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<datalist id="tags"><option value="학생"><option value="강사"><option value="유료"><option value="일반"></datalist>
+
+<script>
+  const STATUS = { approved: '승인됨', pending: '승인 대기', new: '신청 전', rejected: '거절됨', suspended: '정지됨' };
+  let users = [];
+  let meId = null;
+
+  const el = (tag, props = {}, ...kids) => {
+    const n = Object.assign(document.createElement(tag), props);
+    n.append(...kids.filter((k) => k != null));
+    return n;
+  };
+  const when = (d) => (d ? new Date(d).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
+
+  async function api(method, url, body) {
+    const res = await fetch(url, {
+      method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined,
+    });
+    if (res.status === 401 || res.status === 403) { location.href = '/'; throw new Error('auth'); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.status);
+    return data;
+  }
+
+  async function load() {
+    ({ users } = await api('GET', '/api/admin/users'));
+    render();
+  }
+
+  async function update(id, patch) {
+    try { await api('PATCH', `/api/admin/users/${id}`, patch); }
+    catch (e) { alert(e.message === 'self' ? '자기 자신은 바꿀 수 없습니다.' : `변경하지 못했습니다 (${e.message})`); }
+    await load();
+  }
+
+  function renderRequests() {
+    const box = document.getElementById('requests');
+    const pending = users.filter((u) => u.status === 'pending');
+    const count = document.getElementById('pending-count');
+    count.textContent = pending.length;
+    count.classList.toggle('hot', pending.length > 0);
+    if (!pending.length) { box.replaceChildren(el('div', { className: 'panel empty', textContent: '대기 중인 신청이 없습니다.' })); return; }
+    box.replaceChildren(...pending.map((u) => {
+      const tag = el('input', { className: 'tag', value: u.tag || '', maxLength: 30, title: '구분' });
+      tag.setAttribute('list', 'tags');
+      return el('div', { className: 'panel req' },
+        el('div', {},
+          el('div', { className: 'name', textContent: `${u.name || '(이름 없음)'} · ${u.email}` }),
+          el('div', { className: 'meta', textContent: [u.affiliation, u.tag, `신청 ${when(u.appliedAt)}`].filter(Boolean).join(' · ') })),
+        el('div', { className: 'actions' },
+          tag,
+          el('button', { className: 'ok', textContent: '승인', onclick: () => update(u.id, { status: 'approved', tag: tag.value }) }),
+          el('button', { className: 'bad', textContent: '거절', onclick: () => update(u.id, { status: 'rejected' }) })),
+        u.note ? el('div', { className: 'note', textContent: u.note }) : null);
+    }));
+  }
+
+  function renderTable() {
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const sf = document.getElementById('status-filter').value;
+    const tf = document.getElementById('tag-filter').value;
+    const list = users.filter((u) => (!sf || u.status === sf) && (!tf || u.tag === tf)
+      && (!q || [u.email, u.name, u.affiliation].some((v) => v && v.toLowerCase().includes(q))));
+    document.getElementById('all-count').textContent = users.length;
+    document.getElementById('rows').replaceChildren(...list.map((u) => {
+      const self = u.id === meId;
+      const tag = el('input', { className: 'tag', value: u.tag || '', maxLength: 30 });
+      tag.setAttribute('list', 'tags');
+      tag.onchange = () => update(u.id, { tag: tag.value });
+      const actions = el('div', { className: 'row-actions' });
+      if (!self) {
+        if (u.status === 'approved') actions.append(el('button', { textContent: '정지', onclick: () => confirm(`${u.email} 계정을 정지할까요?`) && update(u.id, { status: 'suspended' }) }));
+        else actions.append(el('button', { className: 'ok', textContent: '승인', onclick: () => update(u.id, { status: 'approved' }) }));
+        actions.append(el('button', {
+          textContent: u.role === 'admin' ? '관리자 해제' : '관리자로',
+          onclick: () => confirm(u.role === 'admin' ? `${u.email}의 관리자 권한을 해제할까요?` : `${u.email}을(를) 관리자로 지정할까요?`) && update(u.id, { role: u.role === 'admin' ? 'user' : 'admin' }),
+        }));
+        actions.append(el('button', {
+          className: 'bad', textContent: '삭제',
+          onclick: async () => {
+            if (!confirm(`${u.email} 계정과 저장된 파일을 모두 삭제할까요? 되돌릴 수 없습니다.`)) return;
+            await api('DELETE', `/api/admin/users/${u.id}`).catch((e) => alert(e.message));
+            load();
+          },
+        }));
+      }
+      return el('tr', {},
+        el('td', {},
+          el('div', { className: 'email', textContent: u.email }),
+          el('div', { className: 'small', textContent: [u.name, u.affiliation, u.linked ? null : '아직 로그인 안 함'].filter(Boolean).join(' · ') || '—' })),
+        el('td', {}, tag),
+        el('td', {}, el('span', { className: `pill ${u.status}`, textContent: STATUS[u.status] || u.status }),
+          u.role === 'admin' ? el('span', { className: 'pill admin', textContent: '관리자' }) : null),
+        el('td', { textContent: u.fileCount }),
+        el('td', { className: 'small', textContent: when(u.lastSeenAt) }),
+        el('td', {}, actions));
+    }));
+  }
+
+  function renderTagFilter() {
+    const sel = document.getElementById('tag-filter');
+    const cur = sel.value;
+    const tags = [...new Set(users.map((u) => u.tag).filter(Boolean))].sort();
+    sel.replaceChildren(el('option', { value: '', textContent: '모든 구분' }), ...tags.map((t) => el('option', { value: t, textContent: t })));
+    sel.value = tags.includes(cur) ? cur : '';
+  }
+
+  function render() { renderRequests(); renderTagFilter(); renderTable(); }
+
+  document.getElementById('q').oninput = renderTable;
+  document.getElementById('status-filter').onchange = renderTable;
+  document.getElementById('tag-filter').onchange = renderTable;
+  document.getElementById('logout').onclick = async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/welcome/'; };
+  document.getElementById('add-btn').onclick = async () => {
+    const msg = document.getElementById('add-msg');
+    msg.className = 'msg'; msg.textContent = '';
+    try {
+      const { added } = await api('POST', '/api/admin/users', {
+        emails: document.getElementById('add-emails').value, tag: document.getElementById('add-tag').value,
+      });
+      msg.textContent = `${added}명을 승인 목록에 추가했습니다.`;
+      document.getElementById('add-emails').value = '';
+      load();
+    } catch (e) {
+      msg.className = 'msg err';
+      msg.textContent = e.message === 'no_valid_emails' ? '올바른 이메일이 없습니다.' : `추가하지 못했습니다 (${e.message})`;
+    }
+  };
+
+  api('GET', '/api/me').then(({ user }) => {
+    meId = user.id;
+    document.getElementById('me').textContent = user.email;
+    load();
+  });
+</script>
+</body>
+</html>

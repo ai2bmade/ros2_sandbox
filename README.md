@@ -19,43 +19,63 @@ turtlesim과 노드 그래프로 결과를 확인합니다. 서버는 정적 파
 ## 로컬에서 실행
 
 ```bash
-npm install
-npm run dev        # http://localhost:5173
+npm install && (cd server && npm install)
+npm run build
+cd server && PORT=3000 DEV_LOGIN=1 ADMIN_EMAILS=me@example.com node index.js   # http://localhost:3000
 ```
+
+- `DATABASE_URL`이 없으면 PGlite(내장 PostgreSQL)를 `server/.pglite`에 만들어 씁니다.
+- `DEV_LOGIN=1`이면 `http://localhost:3000/api/auth/dev?email=...`로 Google 없이 로그인할 수 있습니다. 운영(`NODE_ENV=production`)에서는 꺼집니다.
+- 프론트만 고칠 때는 서버를 3000번에 띄워 두고 `npm run dev`(5173번, `/api`는 3000번으로 프록시)를 씁니다.
+
+## 로그인과 승인
+
+- 로그인은 Google만 씁니다. 승인된(`approved`) 사용자만 실습 화면(`/`)에 들어갈 수 있습니다.
+- 처음 로그인한 사람은 `/welcome/`에서 이용 신청을 하고, 관리자가 `/admin/`에서 승인합니다.
+- 관리자는 이메일을 미리 승인 목록에 넣을 수도 있습니다(신청 없이 바로 이용).
+- `ADMIN_EMAILS`에 적은 이메일은 로그인하면 자동으로 관리자가 됩니다.
+- 로그인한 사용자의 파일은 서버(PostgreSQL)에 저장됩니다.
 
 ## Coolify에 배포하기
 
-1. 이 폴더를 GitHub 저장소로 올립니다 (비공개 저장소도 가능).
-   ```bash
-   git remote add origin https://github.com/<계정>/ros2-web-sandbox.git
-   git push -u origin main
-   ```
-2. Coolify → 프로젝트 → **+ New** → **Application** → 저장소 선택
-   (공개 저장소는 *Public Repository*, 비공개는 *Private Repository (with GitHub App)*)
-3. **Build Pack: `Dockerfile`** 선택, **Ports Exposes: `80`**
-4. **Domains** 칸에 반드시 **`https://`** 로 시작하는 주소를 넣습니다.
-   - 임시 주소라면 Coolify가 만들어 준 `sslip.io` 주소의 `http://`를 `https://`로 바꿔서 저장
-   - 가능하면 내 도메인의 서브도메인(예: `https://ros2.mydomain.com`, DNS A 레코드를 VPS IP로)을 쓰는 편이 인증서 발급이 안정적입니다
-5. **Deploy**
+1. Coolify → 프로젝트 → **+ New** → **Application** → 이 저장소, **Build Pack: `Dockerfile`**, **Ports Exposes: `80`**
+2. **Domains**: `https://`로 시작하는 주소 (예: `https://ros2.joshuajhchoi.cloud`)
+3. 같은 프로젝트에 **+ New → Database → PostgreSQL**을 만들고 Start
+4. 앱의 **Environment Variables**
+
+   | 이름 | 값 |
+   | --- | --- |
+   | `DATABASE_URL` | PostgreSQL 화면의 *Postgres URL (internal)* |
+   | `GOOGLE_CLIENT_ID` | Google Cloud → Google 인증 플랫폼 → 클라이언트 |
+   | `GOOGLE_CLIENT_SECRET` | 같은 곳의 보안 비밀번호 |
+   | `ADMIN_EMAILS` | 관리자 Gmail (여러 개는 쉼표로) |
+
+5. Google OAuth 클라이언트의 승인된 리디렉션 URI: `https://<도메인>/api/auth/google/callback`
+6. **Deploy**
 
 ### 배포 후 확인
 
-- 페이지 상단 오른쪽이 **"Python 엔진 준비됨"** (초록 점)이면 성공입니다.
-- 빨간 배너 *"crossOriginIsolated = false"* 가 보이면 Python 노드를 실행할 수 없는 상태입니다. 원인은 둘 중 하나입니다.
-  1. **HTTPS가 아님** — 브라우저는 HTTP 페이지에서 `SharedArrayBuffer`를 막습니다. Domains를 `https://`로 바꾸세요.
-  2. **헤더가 빠짐** — `curl -I https://<주소>/` 결과에 `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`가 있어야 합니다. (컨테이너 안의 nginx가 넣어 주므로 Coolify 쪽에서 따로 설정할 것은 없습니다.)
+- `curl -I https://<주소>/welcome/` 결과에 `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp`가 있어야 합니다. 서버가 모든 응답에 넣어 줍니다.
+- `https://<주소>/api/health`가 `{"ok":true}`면 DB 연결도 정상입니다.
+- 실습 화면 오른쪽 위가 **"Python 엔진 준비됨"**(초록 점)이면 성공입니다.
 
 ## 구조
 
 ```
+server/index.js         Node(Fastify) 서버: 정적 파일 + COOP/COEP 헤더 + API(로그인, 승인, 파일, 관리자)
+server/db.js            PostgreSQL 연결과 테이블 생성 (users, sessions, files)
+public/welcome/         첫 화면: 환영 + Google 로그인 + 이용 신청 + 승인 대기
+public/admin/           관리자 화면: 신청 승인, 이메일 추가, 사용자 관리
+public/privacy/         개인정보처리방침
 public/py/ros_shim.py   rclpy 호환 모듈 (Pyodide 위에서 동작)
 public/py-worker.js     Python 프로세스 1개 = Web Worker 1개
 public/msgs.json        메시지/서비스 타입 정의
+src/editor.js           에디터와 파일 저장 (서버 API로 자동 저장)
 src/graph.js            가상 ROS 2 그래프 (노드·토픽·서비스 라우팅, QoS 호환성)
 src/process.js          워커 관리, SharedArrayBuffer 메시지 채널
 src/cli.js              ros2 명령
-src/shell.js            터미널 (라인 편집, 자동완성, Ctrl+C)
+src/shell.js            터미널 (라인 편집, 자동완성, Ctrl+C, 중지 버튼)
 src/turtlesim.js        turtlesim + teleop
 src/hints.js            초보자 실수 힌트
-nginx.conf / Dockerfile 배포 설정 (COOP/COEP 헤더 포함)
+Dockerfile              프론트 빌드 + Node 서버 실행
 ```
